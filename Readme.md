@@ -7,10 +7,13 @@ Build a bigger picture around official highways agency tweets. The original twee
 ### How To 'Build a bigger picture'
 
 ```
-Tweet    : Accident, junction 15, M6, 12:35
-         :
-Enricher : Oauth connects to API
-         : Retreives latest tweet, determines if it has already been queried
+Original Tweet    : Accident, junction 15, M6, 12:35
+Tweet Scraper     : {"payload": "Congestion at junction 12", "created_at": 01923}
+Tweet Converter   : {"closest_cities": [x, y], "direction": "n", "extra_information": []}
+                  : POST ^converted_tweet to the MotorwayAPI AND to the enricher
+
+Enricher
+         : Retreives converted_tweet
          : Queries TRUSTED_TWEETERS to derive information
          : Queries OTHER_TWEETERS to derive other information
          : Generate the geo-location for the account
@@ -26,11 +29,11 @@ Enricher : Oauth connects to API
 ```
 
 ```json
+-- Post enrichment data
 {
     "original_tweet_id": 0101...,
     "cause_of_incident": "",
     "delay_caused?": "",
-
 }
 ```
 
