@@ -12,7 +12,7 @@ import logging
 mq_logger = logging.getLogger("Requests")
 
 
-class Requests():
+class APIRequests():
 
     def __init__(self):
         self.host = api_base_url
