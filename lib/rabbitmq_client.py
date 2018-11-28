@@ -4,7 +4,7 @@ import queue
 from functools import partial
 from json import dumps, loads
 from sys import exit
-import config
+import lib.config as config
 
 mq_logger = logging.getLogger("RabbitMqClient")
 
