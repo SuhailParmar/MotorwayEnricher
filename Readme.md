@@ -4,6 +4,50 @@
 
 Build a bigger picture around official highways agency tweets. The original tweet will have been mined to identify key attributes.
 
+## Potential Flow
+
+- Recieve Tweet from Rabbit? Bind to a duplicated queue?
+
+- Reads the Json fields to identify what where and when
+
+- Cross references with tier 1 Tweets?
+  - Go to every Handle
+  - Search if they tweeted in an +-x timeframe of the original tweet
+  - See if the tweet is relevant???
+  - record tweet. Repeat for every handle.
+
+    Create a tokeniser_func() (do we want to preserve the original word? e.g. unstem)
+
+    Use TfidfVectorizer with a custom list of stopwords too?
+
+    TfidfVectorizer can create a matrix of all documents
+
+    Once in a standardised format we can extract how similar each tweet is to each other by using the *cosine similarity* method.
+
+    Once in the matrix we can run clustering algorithms to determine common phrases/reasonings between each tweet.
+
+Repeat for others:
+- Calulate tweet discovery maybe use GeoLocation??
+- Repeat Statistical parts
+
+Determine which information should be used.
+
+Create the Json payload containing the information found:
+
+```json
+# Example returned object
+{
+    "extra_information": {
+        "original_tweet_id": 0101...,
+        "cause_of_incident": "",
+        "delay_caused?": "",
+    }
+}
+```
+
+
+
+
 ### How To 'Build a bigger picture'
 
 ```
@@ -40,28 +84,6 @@ Enricher
 
 https://en.wikipedia.org/wiki/Tf%E2%80%93idf
 
-## Work Flow:
-
-- Every time the API recieves a tweet ping the enricher with the  tweet ID of the latest tweet
-
-- Enricher gets the tweet ID.
-
-- Enricher reads the junction of the tweet :: (15)
-- Enricher reads the reason of the tweet   :: ('congestion')
-
-- Enricher figures out the Geo-Location of the Junction (-172...)
-- Enricher attempts to find tweets containing 'Relevant Search Params'
-
- Relevant Search Params:
-
-Query Trusted Accounts
--
-
-Tier 1: permutations of congestion::
-        [ (Congestion, congestion), (Junction 15) or (M6) ]
-
-Tier 2: synonyms for congestion::
-        [ (Traffic)]
 
 ## Interpretation 2
 
@@ -105,9 +127,7 @@ useful_phrases will be converted into a tf-idf matrix. Term frequency-inverse do
 
 Each tweet will be classed as a document
 
-Once in a standardised format we can extract how similar each tweet is to each other by using the *cosine similarity* method.
 
-Once in the matrix we can run clustering algorithms to determine common phrases/reasonings between each tweet.
 
 ### Data analysis,
 
