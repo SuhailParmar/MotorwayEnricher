@@ -25,7 +25,7 @@ class TwitterClient:
                            access_token_key=config.twitter_at_token,
                            access_token_secret=config.twitter_at_secret)
 
-    def poll_user_at_time(self, handle, timestamp):
+    def poll_tweets_between_time_period(self, handle, timestamp):
         """
         Handle: Twitter Account Name @SuhailParmar
         Timestamp: Time want to see if they tweeted at that time
@@ -36,6 +36,7 @@ class TwitterClient:
         from_timestamp, until_timestamp = ut.calc_daterange_boundaries(
             timestamp, 2)
         timeline_in_date_range = []  # Finished
+        th_logger.info('Looking for tweets for user {0} in  period {1} - {2}'.format(handle, from_timestamp, until_timestamp))
 
         while i < max_tweets:
             timeline = self.api.GetUserTimeline(screen_name=handle, count=i+n)
@@ -50,7 +51,7 @@ class TwitterClient:
                 if ut.within_daterange(
                         tweet_timestamp, from_timestamp, until_timestamp):
 
-                    timeline_in_date_range.append(tweet)
+                    timeline_in_date_range.append(tweet.payload)
                     continue
 
                 elif len(timeline_in_date_range) > 0:
