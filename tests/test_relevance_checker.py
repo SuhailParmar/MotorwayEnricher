@@ -36,16 +36,27 @@ class TestRelevanceChecker:
         assert a.__contains__('j14')
         assert a.__contains__('Stoke')
 
-    def test_find_relevant_tweets(self):
-        kws = ["congestion", "traffic"]
+    def test_finds_relevant_motorway_tweets(self):
+        kws = ["M6", "congestion", "traffic"]
         tweets = [
-            "Hello there is congestion",
-            "There is traffic",
-            "Not relevant at all"
+            "Hello there is congestion on the M6",
+            "There is traffic on the M5",
+            "Not relevant at all M3"
+        ]
+
+        rt = self.rc.find_relevant_tweets(kws, tweets)
+        assert len(rt) == 1
+        assert rt.__contains__("Hello there is congestion on the M6")
+
+    def test_find_relevant_tweets(self):
+        kws = ["M6", "congestion", "traffic"]
+        tweets = [
+            "There is traffic on the M5",
+            "Not relevant at all",
+            "Hello there is an accident on the M6"
         ]
 
         rt = self.rc.find_relevant_tweets(kws, tweets)
 
-        assert len(rt) == 2
-        assert rt.__contains__("Hello there is congestion")
-        assert rt.__contains__("There is traffic")
+        assert len(rt) == 1
+        assert rt.__contains__("Hello there is an accident on the M6")
