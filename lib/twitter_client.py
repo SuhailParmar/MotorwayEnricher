@@ -34,7 +34,7 @@ class TwitterClient:
         i = 0  # Index of the tweets array
         max_tweets = 100  # Maximum number of tweets to scrape
         from_timestamp, until_timestamp = ut.calc_daterange_boundaries(
-            timestamp, 2)
+            timestamp, hour_offset=1)
         timeline_in_date_range = []  # Finished
         th_logger.info('Looking for tweets for user {0} in  period {1} - {2}'.format(handle, from_timestamp, until_timestamp))
 
@@ -51,17 +51,25 @@ class TwitterClient:
                 if ut.within_daterange(
                         tweet_timestamp, from_timestamp, until_timestamp):
 
-                    timeline_in_date_range.append(tweet.payload)
+                    timeline_in_date_range.append(tweet.text)
                     continue
+
+                elif tweet_timestamp < from_timestamp:
+                    # If the account has been polled passed the from timestamp boundary
+                    # Then quit
+                    th_logger.debug(
+                        'Unable to find a tweet in the date range in {} tweets'.format(i))
+                    # An empty return
+                    return timeline_in_date_range
 
                 elif len(timeline_in_date_range) > 0:
                     return timeline_in_date_range
 
-                th_logger.debug(
-                    'Havent found a tweet in the date range in {} tweets'.format(i))
+            th_logger.debug(
+                    'Havent found a tweet in the date range in {} tweets.'.format(i))
             i += n
 
         th_logger.info(
             'Didnt find a tweet in the date range in {} tweets'.format(i))
 
-        return False
+        return timeline_in_date_range
