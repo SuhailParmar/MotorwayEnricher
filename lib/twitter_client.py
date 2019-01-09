@@ -2,6 +2,7 @@ import twitter
 import logging
 import lib.config as config
 from lib.utils import Utils
+from lib.natural_language import NaturalLanguage
 from datetime import datetime
 from dateutil.parser import parse
 
@@ -36,6 +37,7 @@ class TwitterClient:
         from_timestamp, until_timestamp = ut.calc_daterange_boundaries(
             timestamp, hour_offset=1)
         timeline_in_date_range = []  # Finished
+        nt = NaturalLanguage()
         th_logger.info('Looking for tweets for user {0} in  period {1} - {2}'.format(handle, from_timestamp, until_timestamp))
 
         while i < max_tweets:
@@ -51,7 +53,9 @@ class TwitterClient:
                 if ut.within_daterange(
                         tweet_timestamp, from_timestamp, until_timestamp):
 
-                    timeline_in_date_range.append(tweet.text)
+                    tokens = nt.tokenize(tweet.text)
+                    lc_tokens = nt.convert_arr_to_lowercase(tokens)
+                    timeline_in_date_range.append(lc_tokens)
                     continue
 
                 elif tweet_timestamp < from_timestamp:
