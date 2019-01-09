@@ -34,8 +34,9 @@ class RelevanceChecker:
         key_words.append("motorway")
 
         # Extract the junction into words
-        for j in original_tweet["junction"]:
-            key_words.append("j" + str(j))
+        for i, j in enumerate(original_tweet["junction"]):
+            key_words.insert((i+1), "j" + str(j))
+
             key_words.append("junction " + str(j))
             try:
                 key_words.append(self.number_to_words[j])
@@ -73,27 +74,36 @@ class RelevanceChecker:
 
         return key_words
 
-    def find_relevant_tweets(self, key_words, tweets):
+    def find_relevant_tweets(self, key_words, tweets, bound=5):
         """
         Determines if the tweets gathered are relevant places into
         three arrays depending on 'importance'
         @key_words: Array of strings
-        @tweets: Array of payloads from tweets.
+        @tweets: Array of tokenized payloads from tweets.
         """
-        relevant_tweets = []
         relevant_tweets_t1 = []  # Directly mention the motorway and junction
         relevant_tweets_t2 = []  # Directly mention the motorway but different junction
-        relevant_tweets_t3 = []  # Mention that mototway in general
 
         for tweet in tweets:
-            if (key_words[0] + " ") not in tweet:
+            if key_words[0] not in tweet:
                 # The motorway in question
                 # Excludes M60 when looking for M6 in String
                 continue
 
-            for i, kw in enumerate(key_words, 1):
+            if (key_words[1]) in tweet:
+                # Check the junction
+                relevant_tweets_t1.append(tweet)
+                continue
+
+            # First 2 aray positions have been checked
+            for i, kw in enumerate(key_words, 2):
                 if kw in tweet:
-                    relevant_tweets.append(tweet)
+                    relevant_tweets_t2.append(tweet)
                     break
 
-        return relevant_tweets
+        if len(relevant_tweets_t1) < bound:
+            return relevant_tweets_t1 + relevant_tweets_t2
+
+        rl_logger.info("{} tweets are being ignored due to the bound param.".format(
+            len(relevant_tweets_t2)))
+        return relevant_tweets_t1

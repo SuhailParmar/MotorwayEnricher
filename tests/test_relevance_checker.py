@@ -28,6 +28,13 @@ test_tweet = {
 class TestRelevanceChecker:
 
     rc = RelevanceChecker()
+    kws = ["m6", "j12", "congestion", "traffic"]
+    tokenized_tweets = [
+        ["m6", "is", "busy", "at", "j12"],
+        ["hello there is congestion on the m60 around j12"],
+        ["busy", "is", "m60"],
+        ["not", "relevant", "at", "all", "M3"]
+    ]
 
     def test_construct_words_from_tweet(self):
         a = self.rc.construct_words_from_tweet(test_tweet, [])
@@ -36,27 +43,30 @@ class TestRelevanceChecker:
         assert a.__contains__('j14')
         assert a.__contains__('Stoke')
 
-    def test_finds_relevant_motorway_tweets(self):
-        kws = ["M6", "congestion", "traffic"]
+    def test_filter_out_m60_only_m6(self):
+        rt = self.rc.find_relevant_tweets(self.kws, self.tokenized_tweets)
+        assert len(rt) == 1
+        assert rt.__contains__(["m6", "is", "busy", "at", "j12"])
+
+    def test_exceeded_bound_for_categorising_tweets(self):
+        """
+        If there are more than (bound) tweets directly referencing the motorway
+        and junction in question use them, as opposed to tweets without referencing
+        that junction.
+        """
+
         tweets = [
-            "Hello there is congestion on the M6",
-            "There is traffic on the M5",
-            "Not relevant at all M3"
+            ["m6", "is", "busy", "at", "j12"],  # 1
+            ["m6", "is", "congested", "at", "j12"],  # 2
+            ["m6", "is", "reallybusy", "at", "j12"],  # 3
+            ["m6", "is", "buzy", "at", "j12"],  # 4
+            ["m6", "is", "amd", "at", "j12"],  # 5
+            ["hello there is congestion on the",  "m60", "around j12"],
+            ["not", "relevant", "at", "all", "M3"],
+            ["busy", "is", "m6"]  # 6 should be ignored
         ]
 
-        rt = self.rc.find_relevant_tweets(kws, tweets)
-        assert len(rt) == 1
-        assert rt.__contains__("Hello there is congestion on the M6")
+        rt = self.rc.find_relevant_tweets(
+            self.kws, tweets, bound=5)
 
-    def test_find_relevant_tweets(self):
-        kws = ["M6", "congestion", "traffic"]
-        tweets = [
-            "There is traffic on the M5",
-            "Not relevant at all",
-            "Hello there is an accident on the M6"
-        ]
-
-        rt = self.rc.find_relevant_tweets(kws, tweets)
-
-        assert len(rt) == 1
-        assert rt.__contains__("Hello there is an accident on the M6")
+        assert len(rt) == 5
