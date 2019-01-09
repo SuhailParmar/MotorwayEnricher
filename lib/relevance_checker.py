@@ -49,15 +49,20 @@ class RelevanceChecker:
         if original_tweet["direction"] == "n":
             key_words.append("northbound")
             key_words.append("north")
+            key_words.append("n/bound")
         elif original_tweet["direction"] == "e":
             key_words.append("eastbound")
             key_words.append("east")
+            key_words.append("e/bound")
         elif original_tweet["direction"] == "s":
             key_words.append("southbound")
             key_words.append("south")
+            key_words.append("s/bound")
         elif original_tweet["direction"] == "w":
             key_words.append("westbound")
             key_words.append("west")
+            key_words.append("w/bound")
+
 
         # TODO neaten this
         reasons = original_tweet["reason"].split(" ")
@@ -87,7 +92,6 @@ class RelevanceChecker:
         for tweet in tweets:
             if key_words[0] not in tweet:
                 # The motorway in question
-                # Excludes M60 when looking for M6 in String
                 continue
 
             if (key_words[1]) in tweet:
