@@ -1,6 +1,7 @@
 from lib.utils import Utils
 from dateutil.parser import parse
 from datetime import timedelta
+from dateutil.tz import tzutc
 
 ut = Utils()
 t = parse("2018-10-17T08:54:13Z")
@@ -8,7 +9,7 @@ from_ts = t - timedelta(hours=2)
 until_ts = t + timedelta(hours=2)
 
 
-class TestDateranges:
+class TestUtils:
 
     def test_not_within_date_boundary_minutes_under(self):
         # 1 minute over
@@ -44,3 +45,8 @@ class TestDateranges:
         # 1 minute over
         test = parse("2018-10-17T10:54:13Z")
         assert ut.within_daterange(test, from_ts, until_ts)
+
+    def test_timestamp_naive_datetimes(self):
+        uad = '2019-01-09T09:36:52'
+        parsed_timestamp = ut.parse_timestamp_with_utc(uad)
+        assert parsed_timestamp.tzinfo == tzutc()
