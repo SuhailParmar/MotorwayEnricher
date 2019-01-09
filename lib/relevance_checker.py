@@ -26,6 +26,11 @@ class RelevanceChecker:
         Convert important data in the tweet into strings
         returns an array of strings
         """
+        mw_number = str(original_tweet["motorway"])
+        mw = "M" + mw_number
+
+        # First element in the KEYWORDS must be the motorway
+        key_words.insert(0, mw)
         key_words.append("motorway")
 
         # Extract the junction into words
@@ -70,16 +75,25 @@ class RelevanceChecker:
 
     def find_relevant_tweets(self, key_words, tweets):
         """
-        Determines if the tweets gathered are relevant
+        Determines if the tweets gathered are relevant places into
+        three arrays depending on 'importance'
         @key_words: Array of strings
         @tweets: Array of payloads from tweets.
         """
-        for i, tweet in enumerate(tweets):
-            remove = True
-            for kw in key_words:
-                if kw in tweet:
-                    remove = False
-            if remove:
-                tweets.remove(tweet)
+        relevant_tweets = []
+        relevant_tweets_t1 = []  # Directly mention the motorway and junction
+        relevant_tweets_t2 = []  # Directly mention the motorway but different junction
+        relevant_tweets_t3 = []  # Mention that mototway in general
 
-        return tweets
+        for tweet in tweets:
+            if (key_words[0] + " ") not in tweet:
+                # The motorway in question
+                # Excludes M60 when looking for M6 in String
+                continue
+
+            for i, kw in enumerate(key_words, 1):
+                if kw in tweet:
+                    relevant_tweets.append(tweet)
+                    break
+
+        return relevant_tweets

@@ -3,5 +3,6 @@
 
 RELEVANT_WORDS = {
     "congestion": ["congestion", "traffic", "accident", "backed",
-                   "up", "gridlock", "roadblock"]
+                   "up", "gridlock", "roadblock", "police", 'incident', "road"
+                   "road works"]
 }
