@@ -38,6 +38,9 @@ class TestRelevanceChecker:
 
     def test_construct_words_from_tweet(self):
         a = self.rc.construct_words_from_tweet(test_tweet, [])
+        assert a[0] == 'm6'
+        assert a[1] == 'j12'
+
         assert a.__contains__('motorway')
         assert a.__contains__('junction 14')
         assert a.__contains__('j14')
