@@ -27,7 +27,7 @@ class RelevanceChecker:
         returns an array of strings
         """
         mw_number = str(original_tweet["motorway"])
-        mw = "M" + mw_number
+        mw = "m" + mw_number
 
         # First element in the KEYWORDS must be the motorway
         key_words.insert(0, mw)
@@ -94,7 +94,7 @@ class RelevanceChecker:
                 # The motorway in question
                 continue
 
-            if (key_words[1]) in tweet:
+            if (key_words[1]) in tweet or (key_words[2] in tweet):
                 # Check the junction
                 relevant_tweets_t1.append(tweet)
                 continue
