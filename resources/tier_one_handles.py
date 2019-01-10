@@ -9,4 +9,5 @@ T1_HANDLES = [
     "finneganhaulage",
     "traffic_update",
     "UKTrafficDelays",
+    "wmtrafficnews"
 ]
