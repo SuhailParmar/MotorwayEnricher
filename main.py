@@ -22,7 +22,12 @@ def callback(ch, method, properties, body):
 
     main_logger.debug('Recieved message from Queue:{}'.format(tweet))
 
-    relevant_words = RELEVANT_WORDS[tweet["reason"]]
+    try:
+        relevant_words = RELEVANT_WORDS[tweet["reason"]]
+    except KeyError as e:
+        main_logger.error("Missing from RW {}".format(e))
+        relevant_words = RELEVANT_WORDS["congestion"]
+
     key_words = rc.construct_words_from_tweet(tweet, relevant_words)
 
     main_logger.debug(
@@ -32,15 +37,32 @@ def callback(ch, method, properties, body):
 
     T1_relevant_tweets_in_time_period = []
     for handle in T1_HANDLES:
+
+        main_logger.debug('Polling @{0}\n\n'.format(handle))
+
         tweets = tc.poll_tweets_between_time_period(handle, timestamp)
-        main_logger.debug('Found {0} tweets:\n{1}'.format(len(tweets), tweets))
+        main_logger.debug(
+            'Found {0} tweets in that time period by @{1}.'.format(len(tweets), handle))
+
+        for tweet in tweets:
+            main_logger.debug('{}'.format(tweet))
+
         tweets = rc.find_relevant_tweets(key_words, tweets)
-        main_logger.debug('Found {0} RELEVANT tweets from @{1}:\n{2}'.format(len(tweets), handle, tweets))
+        main_logger.debug('Found {0} RELEVANT tweets from @{1}:\n{2}'.format(
+            len(tweets), handle, tweets))
 
         for tweet in tweets:
             T1_relevant_tweets_in_time_period.append(tweet)
 
-    main_logger.info('Found {0} RELEVANT tweets in total.'.format(len(T1_relevant_tweets_in_time_period)))
+    main_logger.info(
+        'Key words:\n{}'.format(key_words))
+
+    main_logger.info('Found {0} RELEVANT tweets in total.'.format(
+        len(T1_relevant_tweets_in_time_period)))
+
+    for tweet in T1_relevant_tweets_in_time_period:
+        main_logger.info('{}'.format(tweet))
+
     pass
 
 
