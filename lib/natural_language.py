@@ -8,6 +8,9 @@ class NaturalLanguage:
 
     def convert_arr_to_lowercase(self, array):
 
+        if not isinstance(array, list):
+            return array.lower()
+
         for i, value in enumerate(array):
             try:
                 lc_value = value.lower()
@@ -15,3 +18,4 @@ class NaturalLanguage:
             except Exception as e:
                 print("Couldnt convert" + e)
         return array
+
