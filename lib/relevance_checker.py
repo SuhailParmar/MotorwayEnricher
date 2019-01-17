@@ -63,7 +63,6 @@ class RelevanceChecker:
             key_words.append("west")
             key_words.append("w/bound")
 
-
         # TODO neaten this
         reasons = original_tweet["reason"].split(" ")
         if len(reasons) > 0:
@@ -79,35 +78,81 @@ class RelevanceChecker:
 
         return key_words
 
-    def find_relevant_tweets(self, key_words, tweets, bound=5):
+    def create_eng_keywords_from_tweet(self, original_tweet):
         """
-        Determines if the tweets gathered are relevant places into
-        three arrays depending on 'importance'
-        @key_words: Array of strings
-        @tweets: Array of tokenized payloads from tweets.
+        Generate english keywords from the original tweet
+        Important information: motorway, junctions, direction
         """
-        relevant_tweets_t1 = []  # Directly mention the motorway and junction
-        relevant_tweets_t2 = []  # Directly mention the motorway but different junction
+        motorway = []
+        mw_number = str(original_tweet["motorway"])
+        motorway.append("m" + mw_number)
+
+        junctions = []
+        for j in original_tweet["junction"]:
+            junctions.append("j" + str(j))
+
+            junctions.append("junction " + str(j))
+            try:
+                junctions.append("junction " + self.number_to_words[j])
+            except KeyError as e:
+                rl_logger.warn(
+                    'Junction {} cannot be converted into a word'.format(e))
+
+        directions = []
+
+        if original_tweet["direction"] == "n":
+            directions.append("northbound")
+            directions.append("north")
+            directions.append("n/bound")
+        elif original_tweet["direction"] == "e":
+            directions.append("eastbound")
+            directions.append("east")
+            directions.append("e/bound")
+        elif original_tweet["direction"] == "s":
+            directions.append("southbound")
+            directions.append("south")
+            directions.append("s/bound")
+        elif original_tweet["direction"] == "w":
+            directions.append("westbound")
+            directions.append("west")
+            directions.append("w/bound")
+
+        return (motorway, junctions, directions)
+
+    def find_relevant_tweets(self, tweets, motorway, junctions, directions):
+        """
+        Only choose a subset of tweets which are about:
+        The motorway in question
+        The junction in question
+        Direction is currently irrelevant
+        """
+
+        relevant_tweets = []
 
         for tweet in tweets:
-            if key_words[0] not in tweet:
-                # The motorway in question
+            rl_logger.debug('Relevance checking: {}'.format(tweet))
+            if motorway[0] not in tweet:
+                rl_logger.debug('Tweet is not about the M6.')
                 continue
 
-            if (key_words[1]) in tweet or (key_words[2] in tweet):
-                # Check the junction
-                relevant_tweets_t1.append(tweet)
+            junction_flag = False
+            for junction in junctions:
+                if junction in tweet:
+                    junction_flag = True
+
+            if not junction_flag:
+                rl_logger.debug(
+                    'Tweet is not about junction(s) {}.'.format(junctions))
                 continue
 
-            # First 2 aray positions have been checked
-            for i, kw in enumerate(key_words, 2):
-                if kw in tweet:
-                    relevant_tweets_t2.append(tweet)
-                    break
+            # TODO Maybe have 2 tiers based on direction??
+            relevant_tweets.append(tweet)
 
-        if len(relevant_tweets_t1) < bound:
-            return relevant_tweets_t1 + relevant_tweets_t2
+        rl_logger.info('Found {0} RELEVANT tweets!'.format(
+            len(relevant_tweets)))
 
-        rl_logger.info("{} tweets are being ignored due to the bound param.".format(
-            len(relevant_tweets_t2)))
-        return relevant_tweets_t1
+        if len(relevant_tweets) > 0:
+            for i, relevant_tweet in enumerate(relevant_tweets):
+                rl_logger.info(str(i) + ') ' + relevant_tweet)
+
+        return relevant_tweets
