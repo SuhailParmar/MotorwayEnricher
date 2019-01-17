@@ -10,6 +10,6 @@ class TestNaturalLanguage:
         assert response == ["Hello", ",", "my", "name", "is", "Suhail"]
 
     def test_convert_to_lower_case(self):
-        response = self.nl.convert_arr_to_lowercase(
+        response = self.nl.convert_to_lowercase(
             ["J25", ",", "my", "name", "is", "Suhail"])
         assert response == ["j25", ",", "my", "name", "is", "suhail"]

@@ -1,10 +1,11 @@
 import twitter
 import logging
+from datetime import datetime
+from dateutil.parser import parse
 import lib.config as config
 from lib.utils import Utils
 from lib.natural_language import NaturalLanguage
-from datetime import datetime
-from dateutil.parser import parse
+from resources.tier_one_handles import T1_HANDLES
 
 th_logger = logging.getLogger("TwitterClient")
 ut = Utils()
@@ -35,10 +36,11 @@ class TwitterClient:
         i = 0  # Index of the tweets array
         max_tweets = 100  # Maximum number of tweets to scrape
         from_timestamp, until_timestamp = ut.calc_daterange_boundaries(
-            timestamp, hour_offset=1)
+            timestamp, hour_offset=2)
         timeline_in_date_range = []  # Finished
         nt = NaturalLanguage()
-        th_logger.info('Looking for tweets for user {0} in  period {1} - {2}'.format(handle, from_timestamp, until_timestamp))
+        th_logger.info('Looking for tweets for user {0} in  period {1} - {2}'.format(
+            handle, from_timestamp, until_timestamp))
 
         while i < max_tweets:
             timeline = self.api.GetUserTimeline(screen_name=handle, count=i+n)
@@ -52,10 +54,9 @@ class TwitterClient:
 
                 if ut.within_daterange(
                         tweet_timestamp, from_timestamp, until_timestamp):
-
-                    tokens = nt.tokenize(tweet.text)
-                    lc_tokens = nt.convert_arr_to_lowercase(tokens)
-                    timeline_in_date_range.append(lc_tokens)
+                    # tweet.text is the payload of the tweet
+                    lowercase_tweet = nt.convert_to_lowercase(tweet.text)
+                    timeline_in_date_range.append(lowercase_tweet)
                     continue
 
                 elif tweet_timestamp < from_timestamp:
@@ -70,10 +71,37 @@ class TwitterClient:
                     return timeline_in_date_range
 
             th_logger.debug(
-                    'Havent found a tweet in the date range in {} tweets.'.format(i))
+                'Havent found a tweet in the date range in {} tweets.'.format(i))
             i += n
 
         th_logger.info(
             'Didnt find a tweet in the date range in {} tweets'.format(i))
 
         return timeline_in_date_range
+
+    def poll(self, timestamp):
+        """
+        Poll between user provided timestamps for
+        Tier 1 tweeters
+        """
+
+        T1_tweets_in_time_period = []
+
+        for handle in T1_HANDLES:
+            th_logger.info(
+                'Searching handle @{0}\n\n'.format(handle))
+
+            tweets = self.poll_tweets_between_time_period(handle, timestamp)
+            th_logger.info(
+                'Found {0} tweets in that time period by @{1}.'.format(
+                    len(tweets), handle))
+
+            if len(tweets) == 0:
+                continue
+
+            th_logger.debug('**Tweets Found in time period**')
+            for tweet in tweets:
+                th_logger.debug('{}'.format(tweet))
+                T1_tweets_in_time_period.append(tweet)
+
+        return T1_tweets_in_time_period

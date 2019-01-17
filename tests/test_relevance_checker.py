@@ -28,48 +28,28 @@ test_tweet = {
 class TestRelevanceChecker:
 
     rc = RelevanceChecker()
-    kws = ["m6", "j12", "congestion", "traffic"]
-    tokenized_tweets = [
-        ["m6", "is", "busy", "at", "j12"],
-        ["hello there is congestion on the m60 around j12"],
-        ["busy", "is", "m60"],
-        ["not", "relevant", "at", "all", "M3"]
-    ]
+    mw, js, ds = rc.create_eng_keywords_from_tweet(test_tweet)
 
-    def test_construct_words_from_tweet(self):
-        a = self.rc.construct_words_from_tweet(test_tweet, [])
-        assert a[0] == 'm6'
-        assert a[1] == 'j12'
+    def test_create_keywords(self):
 
-        assert a.__contains__('motorway')
-        assert a.__contains__('junction 14')
-        assert a.__contains__('j14')
-        assert a.__contains__('Stoke')
+        assert self.mw == ["m6"]
+        assert len(self.js) == 6
+        assert self.js[0] == 'j14'
+        assert self.js[3] == 'j15'
+        assert len(self.ds) == 3
+        assert self.ds[0] == 'northbound'
 
-    def test_filter_out_m60_only_m6(self):
-        rt = self.rc.find_relevant_tweets(self.kws, self.tokenized_tweets)
-        assert len(rt) == 1
-        assert rt.__contains__(["m6", "is", "busy", "at", "j12"])
+    def test_find_relevant_tweets(self):
 
-    def test_exceeded_bound_for_categorising_tweets(self):
-        """
-        If there are more than (bound) tweets directly referencing the motorway
-        and junction in question use them, as opposed to tweets without referencing
-        that junction.
-        """
+        t1 = "The m6 junction 14 is rammed!"
+        t2 = " m6 j15 is so busy"
+        t3 = " m6 j13 is so busy"  # Irrelevant
 
-        tweets = [
-            ["m6", "is", "busy", "at", "j12"],  # 1
-            ["m6", "is", "congested", "at", "j12"],  # 2
-            ["m6", "is", "reallybusy", "at", "j12"],  # 3
-            ["m6", "is", "buzy", "at", "j12"],  # 4
-            ["m6", "is", "amd", "at", "j12"],  # 5
-            ["hello there is congestion on the",  "m60", "around j12"],
-            ["not", "relevant", "at", "all", "M3"],
-            ["busy", "is", "m6"]  # 6 should be ignored
-        ]
+        documents = [t1, t2, t3]
+        response = self.rc.find_relevant_tweets(
+            documents, self.mw, self.js, self.ds)
+        assert len(response) == 2
+        assert response[0] == t1
+        assert response[1] == t2
 
-        rt = self.rc.find_relevant_tweets(
-            self.kws, tweets, bound=5)
-
-        assert len(rt) == 5
+    # M60 bug

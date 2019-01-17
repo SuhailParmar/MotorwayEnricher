@@ -6,12 +6,16 @@ class NaturalLanguage:
     def tokenize(self, sentence):
         return word_tokenize(sentence)
 
-    def convert_arr_to_lowercase(self, array):
+    def convert_to_lowercase(self, values):
 
-        for i, value in enumerate(array):
+        if not isinstance(values, list):
+            return values.lower()
+
+        for i, value in enumerate(values):
             try:
                 lc_value = value.lower()
-                array[i] = lc_value
+                values[i] = lc_value
             except Exception as e:
                 print("Couldnt convert" + e)
-        return array
+        return values
+
