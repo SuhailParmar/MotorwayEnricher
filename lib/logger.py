@@ -22,14 +22,8 @@ class Logger:
 
         console_logger = logging.StreamHandler()  # Handler to write to stdout
         console_logger.name = 'TweetEnricher'
-        console_logger.setLevel(logging.INFO)
-        console_format = logging.Formatter(
-            console_logging_format, datefmt='%Y-%m-%dT%H:%M:%S')
-        console_logger.setFormatter(console_format)
-
-        # Prevent noise in log
-        logging.getLogger("pika").propagate = False
-        logging.getLogger('').addHandler(console_logger)
+        console_logger.setLevel(logging.DEBUG)
+        logging.getLogger("pika").setLevel(logging.WARNING)
         logging.getLogger("requests").setLevel(logging.WARNING)
         logging.getLogger("urllib3").setLevel(logging.WARNING)
         logging.getLogger("requests_oauthlib").setLevel(logging.WARNING)

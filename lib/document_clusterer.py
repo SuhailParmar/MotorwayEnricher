@@ -15,21 +15,32 @@ class DocumentClusterer:
         self.nc = NaturalLanguage()
 
         self.tfidf_vectorizer = TfidfVectorizer(
-            min_df=0.1, max_df=0.9, stop_words='english',
-            use_idf=True, ngram_range=(1, 3)
+            stop_words='english',
+            use_idf=True
+            #min_df=0.1, max_df=0.9, stop_words='english',
+            #use_idf=True, ngram_range=(1, 3)
         )
 
         self.tdidf_matrix = None
+        self.dist = None
+        self.cluster_names = None
+        self.tfidf_matrix_terms = None
 
     def create_tf_idf_matrix(self, documents):
         """
         Create the matrix based on the documents provided
         """
         self.tdidf_matrix = self.tfidf_vectorizer.fit_transform(documents)
-        dist = 1 - cosine_similarity(self.tdidf_matrix)  # Required later
+        self.dist = 1 - cosine_similarity(self.tdidf_matrix)
+        dc_logger.debug(self.tdidf_matrix)
         return self.tdidf_matrix
 
-    def cluster(self, n_clusters=3):
+    def interpret_matrix(self):
+        self.tfidf_matrix_terms = self.tfidf_vectorizer.get_feature_names()
+        for i, value in enumerate(self.tfidf_matrix_terms):
+            dc_logger.debug(i, value)
+
+    def cluster(self, n_clusters=2):
         # Based on the original documents provided assign each
         # a clustering number.
         # Choose the number of clusters to create
@@ -37,30 +48,30 @@ class DocumentClusterer:
         km = KMeans(n_clusters=n_clusters)
         km.fit(self.tdidf_matrix)
 
-        clusters = km.labels_.tolist()
+        self.cluster_names = km.labels_.tolist()
         cluster_centeroids = km.cluster_centers_.argsort()[:, ::-1]
 
         # All of the vocabulary in the tfidf matrix
-        tfidf_matrix_terms = self.tfidf_vectorizer.get_feature_names()
+        self.tfidf_matrix_terms = self.tfidf_vectorizer.get_feature_names()
 
         # Get the indexs of the values closest to the centroid
         # The indexes correlate to the position in the tfidf matrix
         values_closest_to_centroid = 5  # Return the n closest values to that centroid
         relvant_values_per_cluster = {}
-        terms = []
         for i in range(0, n_clusters):
+            terms = []
+
             # Get the indexs for each cluster
             tfidf_matrix_indexs = cluster_centeroids[i,
                                                      :values_closest_to_centroid]
             dc_logger.info("Cluster {}:".format(i))
             print("Cluster {}:".format(i))
             for index in tfidf_matrix_indexs:
-                term = tfidf_matrix_terms[index]
+                term = self.tfidf_matrix_terms[index]
                 dc_logger.info(term)
                 print(term)
                 terms.append(term)
             dc_logger.info('---')
-            print('---')
 
             relvant_values_per_cluster[i] = terms
 

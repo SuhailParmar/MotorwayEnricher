@@ -1,0 +1,4 @@
+{
+  "tests/test_document_clusterer.py::TestDocumentClusterer::test_cluster": true,
+  "tests/test_document_clusterer.py::TestDocumentClusterer::test_word_stripper": true
+}

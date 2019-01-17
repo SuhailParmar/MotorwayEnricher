@@ -1,0 +1,16 @@
+[
+  "tests/test_document_clusterer.py::TestDocumentClusterer::test_word_stripper",
+  "tests/test_document_clusterer.py::TestDocumentClusterer::test_cluster",
+  "tests/test_natural_language.py::TestNaturalLanguage::test_lower_case_convertion",
+  "tests/test_natural_language.py::TestNaturalLanguage::test_convert_to_lower_case",
+  "tests/test_relevance_checker.py::TestRelevanceChecker::test_create_keywords",
+  "tests/test_relevance_checker.py::TestRelevanceChecker::test_find_relevant_tweets",
+  "tests/test_utils.py::TestUtils::test_not_within_date_boundary_minutes_under",
+  "tests/test_utils.py::TestUtils::test_not_within_date_boundary_minutes_over",
+  "tests/test_utils.py::TestUtils::test_not_within_date_boundary_hours_over",
+  "tests/test_utils.py::TestUtils::test_not_within_date_boundary_hours_under",
+  "tests/test_utils.py::TestUtils::test_within_date_boundary_on_lower",
+  "tests/test_utils.py::TestUtils::test_within_date_boundary",
+  "tests/test_utils.py::TestUtils::test_within_date_boundary_on_higher",
+  "tests/test_utils.py::TestUtils::test_timestamp_naive_datetimes"
+]
