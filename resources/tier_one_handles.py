@@ -1,13 +1,17 @@
 T1_HANDLES = [
     "HighwaysEngland",
-    #"live_coventry",
+    "CtrafficUK",
     "TomBurnett88",
     "HighwaysWMIDS",
     "HighwaysNWEST",
     "HighwaysSEAST",
+    "HighwaysEAST",
     "TIITraffic",
     "finneganhaulage",
     "traffic_update",
     "UKTrafficDelays",
-    "wmtrafficnews"
+    "wmtrafficnews",
+    "nwtrafficnews",
+    "WMidsAlerts",
+    "bbc5livetravel"
 ]

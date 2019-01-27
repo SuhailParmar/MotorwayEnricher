@@ -116,7 +116,7 @@ class RelevanceChecker:
             directions.append("westbound")
             directions.append("west")
             directions.append("w/bound")
-
+        rl_logger.debug("Constructed Keywords:\n{0}{1}{2}".format(motorway, junctions, directions))
         return (motorway, junctions, directions)
 
     def find_relevant_tweets(self, tweets, motorway, junctions, directions):

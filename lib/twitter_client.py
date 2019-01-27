@@ -84,7 +84,6 @@ class TwitterClient:
         Poll between user provided timestamps for
         Tier 1 tweeters
         """
-
         T1_tweets_in_time_period = []
 
         for handle in T1_HANDLES:
@@ -105,3 +104,73 @@ class TwitterClient:
                 T1_tweets_in_time_period.append(tweet)
 
         return T1_tweets_in_time_period
+
+    def search_tweets(self, original_tweet_timestamp, params):
+        """
+        params M6 J3 #// Space seperated values
+        date 'yyyy:mm:dd'
+        COuldnt get max_id to work
+        """
+        timestamp = ut.parse_timestamp_with_utc(original_tweet_timestamp)
+        # Only get tweets 2 hours after reported incident
+        from_timestamp, until_timestamp = ut.calc_daterange_boundaries(
+            timestamp, from_offset=0, to_offset=2)
+
+        th_logger.info(
+            'Looking for global tweets during period {0} - {1}'.format(
+                from_timestamp, until_timestamp))
+
+        raw_query = "q=" + params
+
+        """
+        Search tweets which are in a specific date boundary
+        If the last tweet is in bounds we need to search more tweets as well
+        If the last tweet is above upper bound search more tweets
+        if last tweet is under lower bound we need to stop searching
+        """
+
+        nt = NaturalLanguage()
+        valid_results = []
+        continue_polling = True  # Poll as many tweets as possible
+        maxid = None
+        while continue_polling:
+            # Get 20 Tweets each iteration
+
+            if maxid is None:
+                results = self.api.GetSearch(raw_query=raw_query,
+                                             until=from_timestamp.isoformat(),
+                                             )
+            else:
+                results = self.api.GetSearch(raw_query=raw_query,
+                                             until=from_timestamp.isoformat(),
+                                             max_id=maxid
+                                             )
+
+            # Check if the last tweet is under boundary
+            last_tweet = results[len(results) - 1]
+            last_tweet_timestamp = parse(last_tweet.created_at)
+
+            in_range = ut.is_day_in_range(
+                last_tweet_timestamp, from_timestamp, until_timestamp)
+
+            if in_range is 1:
+                # Keep polling
+                maxid = (last_tweet.id -1)
+                continue
+
+            elif in_range is 2:
+                continue_polling = False
+
+            for tweet in results:
+                if tweet.user.screen_name in T1_HANDLES:
+                    # Ignore tweets already grabbed
+                    continue
+
+                tweet_timestamp = parse(tweet.created_at)
+                if(ut.within_daterange(
+                        tweet_timestamp, from_timestamp, until_timestamp)):
+
+                    lowercase_tweet = nt.convert_to_lowercase(tweet.text)
+                    valid_results.append(lowercase_tweet)
+
+        return valid_results

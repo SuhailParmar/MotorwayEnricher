@@ -16,7 +16,7 @@ class DocumentClusterer:
 
         self.tfidf_vectorizer = TfidfVectorizer(
             stop_words='english',
-            use_idf=True
+            use_idf=True, min_df=0.1
             #min_df=0.1, max_df=0.9, stop_words='english',
             #use_idf=True, ngram_range=(1, 3)
         )
