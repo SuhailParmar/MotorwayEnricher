@@ -30,6 +30,25 @@ class TestRelevanceChecker:
     rc = RelevanceChecker()
     mw, js, ds = rc.create_eng_keywords_from_tweet(test_tweet)
 
+    def test_relevant_direction(self):
+
+        tweet_gathered = [
+            'travel: very slow traffic due to lorry tyre on the road earlier on m25 clockwise from j8 a217 brighton road (reigat… ',
+            'travel: very slow traffic due to lorry tyre on the road earlier on m25 anti-clockwise from j8 a217 brighton road (reigat… '
+        ]
+
+        assert self.rc.is_relevant_direction(
+            "c", tweet_gathered[0]) is True
+
+        assert self.rc.is_relevant_direction(
+            "a", tweet_gathered[0]) is False
+
+        assert self.rc.is_relevant_direction(
+            "a", tweet_gathered[1]) is True
+
+        assert self.rc.is_relevant_direction(
+            "c", tweet_gathered[1]) is False
+
     def test_create_keywords(self):
 
         assert self.mw == ["m6"]
