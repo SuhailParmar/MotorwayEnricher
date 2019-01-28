@@ -9,6 +9,7 @@ from resources.tier_one_handles import T1_HANDLES
 
 th_logger = logging.getLogger("TwitterClient")
 ut = Utils()
+nt = NaturalLanguage()
 
 
 class TwitterClient:
@@ -105,72 +106,102 @@ class TwitterClient:
 
         return T1_tweets_in_time_period
 
-    def search_tweets(self, original_tweet_timestamp, params):
+    def search_tweets_between_time_period(self, original_tweet_timestamp, query_params):
         """
-        params M6 J3 #// Space seperated values
-        date 'yyyy:mm:dd'
-        COuldnt get max_id to work
+        Search for tweets fulfilling the query params
+        original_tweet_timestamp 2019-01-25T18:00:45
+        query_params M6 J3 #// Space seperated values
         """
-        timestamp = ut.parse_timestamp_with_utc(original_tweet_timestamp)
-        # Only get tweets 2 hours after reported incident
+        #timestamp = ut.parse_timestamp_with_utc(original_tweet_timestamp)
+        # Get the boundaries of the timerange 4 hours greater
         from_timestamp, until_timestamp = ut.calc_daterange_boundaries(
-            timestamp, from_offset=0, to_offset=2)
+            original_tweet_timestamp, from_offset=0, to_offset=4)
+        # Twitter API require date in form YYYY/MM/DD
+        from_date = from_timestamp.strftime('%Y-%m-%d')
+        tweets_in_date_range = []
 
         th_logger.info(
-            'Looking for global tweets during period {0} - {1}'.format(
-                from_timestamp, until_timestamp))
+            'Searching for global tweets during period {0} - {1} under query {2}'.format(
+                from_timestamp, until_timestamp, query_params))
 
-        raw_query = "q=" + params
+        max_id = None  # Prevent retrieving the same tweet
+        continue_polling = True  # Stop retrieving new tweets
 
-        """
-        Search tweets which are in a specific date boundary
-        If the last tweet is in bounds we need to search more tweets as well
-        If the last tweet is above upper bound search more tweets
-        if last tweet is under lower bound we need to stop searching
-        """
-
-        nt = NaturalLanguage()
-        valid_results = []
-        continue_polling = True  # Poll as many tweets as possible
-        maxid = None
         while continue_polling:
-            # Get 20 Tweets each iteration
+            tweets = self.api.GetSearch(count=25, term=query_params,
+                                        since=from_date,
+                                        max_id=max_id)
 
-            if maxid is None:
-                results = self.api.GetSearch(raw_query=raw_query,
-                                             until=from_timestamp.isoformat(),
-                                             )
-            else:
-                results = self.api.GetSearch(raw_query=raw_query,
-                                             until=from_timestamp.isoformat(),
-                                             max_id=maxid
-                                             )
-
-            # Check if the last tweet is under boundary
-            last_tweet = results[len(results) - 1]
-            last_tweet_timestamp = parse(last_tweet.created_at)
-
-            in_range = ut.is_day_in_range(
-                last_tweet_timestamp, from_timestamp, until_timestamp)
-
-            if in_range is 1:
-                # Keep polling
-                maxid = (last_tweet.id -1)
-                continue
-
-            elif in_range is 2:
+            if max_id is not None and(tweets[len(tweets) - 1].id == max_id):
+                # Ensure the polled tweets arent repeats
                 continue_polling = False
+                break
 
-            for tweet in results:
-                if tweet.user.screen_name in T1_HANDLES:
-                    # Ignore tweets already grabbed
-                    continue
+            if len(tweets) == 0:
+                th_logger.info(
+                    "Retrieved no tweets relating to the original tweet.")
+                continue_polling = False
+                break
 
+            max_id = tweets[len(tweets) - 1].id
+            # Reverse inspect the timeline
+            for index in range(len(tweets)-1, 0, -1):
+                tweet = tweets[index]
+                th_logger.info("Insepecting tweet text\n{0}\nAt {1}".format(
+                    tweet.text, tweet.created_at))
+                # Created At timestamp
                 tweet_timestamp = parse(tweet.created_at)
-                if(ut.within_daterange(
-                        tweet_timestamp, from_timestamp, until_timestamp)):
+                in_range = ut.is_day_in_range(
+                    tweet_timestamp, from_timestamp, until_timestamp)
 
+                if in_range is 0:
+                    th_logger.info("Tweet is in range")
+
+                    if tweet.user.screen_name is "@epsomcanine":
+                        th_logger.info(
+                            'Skipping Dog tweet: {}'.format(tweet.text))
+
+                    # The tweet's timestamp is in bounds of from_timestamp and until_timestamp
                     lowercase_tweet = nt.convert_to_lowercase(tweet.text)
-                    valid_results.append(lowercase_tweet)
+                    lowercase_tweet = ut.strip_link_from_tweet(lowercase_tweet)
+                    # ignore retweets
+                    if lowercase_tweet[0] == 'r' and lowercase_tweet[1] == 't':
+                        th_logger.info(
+                            'Skipping Retweet: {}'.format(tweet.text))
+                    # Ignore duplicates
+                    elif lowercase_tweet in tweets_in_date_range:
+                        th_logger.info(
+                            'Skipping duplicate tweet: {}'.format(tweet.text))
+                    else:
+                        th_logger.info(
+                            '** Keeping tweet:\n {}'.format(tweet.text))
+                        tweets_in_date_range.append(lowercase_tweet)
+                elif in_range is 1:
+                    # Re-Poll
+                    th_logger.info("Tweet is ABOVE range. Repolling")
+                    break
+                elif in_range is 2:
+                    # The tweet is earlier than the lower bound
+                    # Stop polling but continue to validate tweets
+                    th_logger.info("Tweet is BELOW range. Stopped Polling.")
+                    continue_polling = False
 
-        return valid_results
+        return tweets_in_date_range
+
+        """
+            if tweet.user.screen_name in T1_HANDLES:
+                # Ignore tweets already grabbed
+                continue
+            keep = True
+            for handle in T1_HANDLES:
+                # Check if is a non-retweet of a Tiered account
+                if handle in tweet.text:
+                    print(">> Handle in text.")
+                    keep = False
+                    break
+            if keep:
+                lowercase_tweet = nt.convert_to_lowercase(tweet.text)
+                if lowercase_tweet not in timeline_in_date_range:
+                    print(">> Not duplicate!.")
+                    timeline_in_date_range.append(lowercase_tweet)
+            """
