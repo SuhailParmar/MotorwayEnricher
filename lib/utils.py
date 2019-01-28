@@ -2,6 +2,7 @@ from json import loads
 from datetime import timedelta
 from datetime import timezone
 from dateutil.parser import parse
+from re import search
 import logging
 utils_logger = logging.getLogger("Utils")
 
@@ -48,6 +49,17 @@ class Utils:
             return 2
 
         return 0  # (from_ts <= new_ts <= until_ts)
+
+    def strip_link_from_tweet(self, tweet):
+        """
+        The link occurs at the end of the tweet, slice off from the
+        start of http to the end of the tweet.
+        """
+        reg = search("http", tweet)
+        if reg is not None:
+            index = reg.start()
+            return tweet[:index]
+        return tweet
 
     def parse_timestamp_with_utc(self, utc_unaware_timestamp):
         """
