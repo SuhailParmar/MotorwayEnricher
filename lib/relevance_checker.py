@@ -21,63 +21,6 @@ class RelevanceChecker:
             25: "twenty-five"
         }
 
-    def construct_words_from_tweet(self, original_tweet, key_words):
-        """
-        Convert important data in the tweet into strings
-        returns an array of strings
-        """
-        mw_number = str(original_tweet["motorway"])
-        mw = "m" + mw_number
-
-        # First element in the KEYWORDS must be the motorway
-        key_words.insert(0, mw)
-        key_words.append("motorway")
-
-        # Extract the junction into words
-        for i, j in enumerate(original_tweet["junction"]):
-            key_words.insert((i+1), "j" + str(j))
-
-            key_words.append("junction " + str(j))
-            try:
-                key_words.append(self.number_to_words[j])
-            except KeyError as e:
-                rl_logger.warn(
-                    'Junction {} cannot be converted into a word'.format(e))
-
-        key_words.append("m" + str(original_tweet["motorway"]))
-
-        if original_tweet["direction"] == "n":
-            key_words.append("northbound")
-            key_words.append("north")
-            key_words.append("n/bound")
-        elif original_tweet["direction"] == "e":
-            key_words.append("eastbound")
-            key_words.append("east")
-            key_words.append("e/bound")
-        elif original_tweet["direction"] == "s":
-            key_words.append("southbound")
-            key_words.append("south")
-            key_words.append("s/bound")
-        elif original_tweet["direction"] == "w":
-            key_words.append("westbound")
-            key_words.append("west")
-            key_words.append("w/bound")
-
-        # TODO neaten this
-        reasons = original_tweet["reason"].split(" ")
-        if len(reasons) > 0:
-            for reason in reasons:
-                key_words.append(reason)
-        else:
-            key_words.append(reasons)
-
-        for city in original_tweet["closest_cities"]:
-            cities = city.split(" ")
-            for c in cities:
-                key_words.append(c)
-
-        return key_words
-
     def create_eng_keywords_from_tweet(self, original_tweet):
         """
         Generate english keywords from the original tweet
@@ -85,19 +28,19 @@ class RelevanceChecker:
         """
         motorway = []
         mw_number = str(original_tweet["motorway"])
-        motorway.append("m" + mw_number)
+        motorway.append("M" + mw_number)
 
         junctions = []
         for j in original_tweet["junction"]:
-            junctions.append("j" + str(j))
-
+            junctions.append("J" + str(j))
+            """
             junctions.append("junction " + str(j))
             try:
                 junctions.append("junction " + self.number_to_words[j])
             except KeyError as e:
                 rl_logger.warn(
                     'Junction {} cannot be converted into a word'.format(e))
-
+            """
         directions = []
 
         if original_tweet["direction"] == "n":
@@ -116,6 +59,11 @@ class RelevanceChecker:
             directions.append("westbound")
             directions.append("west")
             directions.append("w/bound")
+        elif original_tweet["direction"] == "a":
+            directions.append("anti-clockwise")
+        elif original_tweet["direction"] == "c":
+            directions.append("clockwise")
+
         rl_logger.debug("Constructed Keywords:\n{0}{1}{2}".format(motorway, junctions, directions))
         return (motorway, junctions, directions)
 
