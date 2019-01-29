@@ -4,6 +4,8 @@ from datetime import timezone
 from dateutil.parser import parse
 from re import search
 import logging
+from resources.meaningless_words import meaningless_words
+
 utils_logger = logging.getLogger("Utils")
 
 
@@ -50,17 +52,6 @@ class Utils:
 
         return 0  # (from_ts <= new_ts <= until_ts)
 
-    def strip_link_from_tweet(self, tweet):
-        """
-        The link occurs at the end of the tweet, slice off from the
-        start of http to the end of the tweet.
-        """
-        reg = search("http", tweet)
-        if reg is not None:
-            index = reg.start()
-            return tweet[:index]
-        return tweet
-
     def parse_timestamp_with_utc(self, utc_unaware_timestamp):
         """
         utc_unaware_timestamp: tweet["time_timestamp"]
@@ -71,3 +62,28 @@ class Utils:
         utc_aware_timestamp = utc_unaware_timestamp + 'Z'
         utc_aware_timestamp_datetime = parse(utc_aware_timestamp)
         return utc_aware_timestamp_datetime
+
+    @staticmethod
+    def strip_link_from_tweet(tweet):
+        """
+        The link occurs at the end of the tweet, slice off from the
+        start of http to the end of the tweet.
+        """
+        reg = search("http", tweet)
+        if reg is not None:
+            index = reg.start()
+            return tweet[:index]
+        return tweet
+
+    @staticmethod
+    def strip_words(documents, kws):
+        kws += meaningless_words
+        utils_logger.debug(documents)
+        for i, document in enumerate(documents):
+            doc_temp = document
+            for word in kws:
+                if word in document:
+                    doc_temp = doc_temp.replace(word, "")
+            documents[i] = doc_temp
+        utils_logger.debug(documents)
+        return documents
