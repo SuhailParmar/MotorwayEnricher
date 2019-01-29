@@ -82,17 +82,6 @@ class DocumentClusterer:
         df.index.rename('cluster', inplace=True)
         return df.sort_index()
 
-    def strip_words(self, documents, kws):
-        dc_logger.debug(documents)
-        for i, document in enumerate(documents):
-            doc_temp = document
-            for word in kws:
-                if word in document:
-                    doc_temp = doc_temp.replace(word, "")
-            documents[i] = doc_temp
-        dc_logger.debug(documents)
-        return documents
-
     def main(self, documents):
         self.create_tf_idf_matrix(documents)
         v_p_clusters = self.cluster()
