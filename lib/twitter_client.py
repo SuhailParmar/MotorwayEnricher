@@ -5,11 +5,13 @@ from dateutil.parser import parse
 import lib.config as config
 from lib.utils import Utils
 from lib.natural_language import NaturalLanguage
+from lib.relevance_checker import RelevanceChecker
 from resources.tier_one_handles import T1_HANDLES
 
 th_logger = logging.getLogger("TwitterClient")
 ut = Utils()
 nt = NaturalLanguage()
+rc = RelevanceChecker()
 
 
 class TwitterClient:
@@ -32,6 +34,7 @@ class TwitterClient:
         """
         Handle: Twitter Account Name @SuhailParmar
         Timestamp: Time want to see if they tweeted at that time
+        TODO convert to using maxid
         """
         n = 5  # Number of tweets to grab at one time
         i = 0  # Index of the tweets array
@@ -106,22 +109,26 @@ class TwitterClient:
 
         return T1_tweets_in_time_period
 
-    def search_tweets_between_time_period(self, original_tweet_timestamp, query_params):
+    def search_tweets_between_time_period(self,
+                                          original_tweet_timestamp,
+                                          original_direction,
+                                          query_params):
         """
         Search for tweets fulfilling the query params
         original_tweet_timestamp 2019-01-25T18:00:45
         query_params M6 J3 #// Space seperated values
         """
-        #timestamp = ut.parse_timestamp_with_utc(original_tweet_timestamp)
+        # timestamp = ut.parse_timestamp_with_utc(original_tweet_timestamp)
         # Get the boundaries of the timerange 4 hours greater
         from_timestamp, until_timestamp = ut.calc_daterange_boundaries(
             original_tweet_timestamp, from_offset=0, to_offset=4)
+
         # Twitter API require date in form YYYY/MM/DD
         from_date = from_timestamp.strftime('%Y-%m-%d')
         tweets_in_date_range = []
 
         th_logger.info(
-            'Searching for global tweets during period {0} - {1} under query {2}'.format(
+            'Globally searching tweets during period {0} - {1} under query {2}'.format(
                 from_timestamp, until_timestamp, query_params))
 
         max_id = None  # Prevent retrieving the same tweet
@@ -156,26 +163,21 @@ class TwitterClient:
 
                 if in_range is 0:
                     th_logger.info("Tweet is in range")
+                    relevant_tweet =\
+                        rc.is_tweet_relevant(tweet.text, original_direction)
 
-                    if tweet.user.screen_name is "@epsomcanine":
-                        th_logger.info(
-                            'Skipping Dog tweet: {}'.format(tweet.text))
+                    if not relevant_tweet:
+                        continue
 
-                    # The tweet's timestamp is in bounds of from_timestamp and until_timestamp
-                    lowercase_tweet = nt.convert_to_lowercase(tweet.text)
-                    lowercase_tweet = ut.strip_link_from_tweet(lowercase_tweet)
-                    # ignore retweets
-                    if lowercase_tweet[0] == 'r' and lowercase_tweet[1] == 't':
-                        th_logger.info(
-                            'Skipping Retweet: {}'.format(tweet.text))
                     # Ignore duplicates
-                    elif lowercase_tweet in tweets_in_date_range:
+                    if relevant_tweet in tweets_in_date_range:
                         th_logger.info(
-                            'Skipping duplicate tweet: {}'.format(tweet.text))
-                    else:
-                        th_logger.info(
-                            '** Keeping tweet:\n {}'.format(tweet.text))
-                        tweets_in_date_range.append(lowercase_tweet)
+                            'Skipping duplicate tweet: {}'.format(
+                                relevant_tweet))
+                        continue
+
+                    tweets_in_date_range.append(relevant_tweet)
+
                 elif in_range is 1:
                     # Re-Poll
                     th_logger.info("Tweet is ABOVE range. Repolling")
@@ -188,20 +190,3 @@ class TwitterClient:
 
         return tweets_in_date_range
 
-        """
-            if tweet.user.screen_name in T1_HANDLES:
-                # Ignore tweets already grabbed
-                continue
-            keep = True
-            for handle in T1_HANDLES:
-                # Check if is a non-retweet of a Tiered account
-                if handle in tweet.text:
-                    print(">> Handle in text.")
-                    keep = False
-                    break
-            if keep:
-                lowercase_tweet = nt.convert_to_lowercase(tweet.text)
-                if lowercase_tweet not in timeline_in_date_range:
-                    print(">> Not duplicate!.")
-                    timeline_in_date_range.append(lowercase_tweet)
-            """
