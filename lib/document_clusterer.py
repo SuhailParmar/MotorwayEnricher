@@ -3,6 +3,7 @@ from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import cosine_similarity
 from lib.natural_language import NaturalLanguage
 import pandas as pd
+import numpy as np
 import logging
 
 dc_logger = logging.getLogger("DocumentClusterer")
@@ -16,31 +17,35 @@ class DocumentClusterer:
 
         self.tfidf_vectorizer = TfidfVectorizer(
             stop_words='english',
-            use_idf=True
-            #min_df=0.1, max_df=0.9, stop_words='english',
-            #use_idf=True, ngram_range=(1, 3)
+            use_idf=True,
+            min_df=0.1,
+            max_df=0.9,
+            # min_df=0.1, max_df=0.9, stop_words='english',
+            # use_idf=True, ngram_range=(1, 3)
         )
 
         self.tdidf_matrix = None
+        self.weights_df = None
         self.dist = None
         self.cluster_names = None
         self.tfidf_matrix_terms = None
 
     def create_tf_idf_matrix(self, documents):
         """
-        Create the matrix based on the documents provided
+        Create a TF*IDF matrix based on the documents provided
         """
         self.tdidf_matrix = self.tfidf_vectorizer.fit_transform(documents)
         self.dist = 1 - cosine_similarity(self.tdidf_matrix)
-        dc_logger.debug(self.tdidf_matrix)
         return self.tdidf_matrix
 
-    def interpret_matrix(self):
-        self.tfidf_matrix_terms = self.tfidf_vectorizer.get_feature_names()
-        for i, value in enumerate(self.tfidf_matrix_terms):
-            dc_logger.debug(i, value)
+    def create_term_weight_df(self):
+        terms = self.tfidf_vectorizer.get_feature_names()
+        weights = np.asarray((self.tdidf_matrix.mean(axis=0))).ravel().tolist()
+        weights_df = pd.DataFrame({'term': terms, 'weight': weights})
+        self.weights_df = weights_df.sort_values(by='weight', ascending=False)
+        dc_logger.debug(weights_df.head(20))
 
-    def cluster(self, n_clusters=2):
+    def cluster(self, n_clusters=3):
         # Based on the original documents provided assign each
         # a clustering number.
         # Choose the number of clusters to create
@@ -53,7 +58,6 @@ class DocumentClusterer:
 
         # All of the vocabulary in the tfidf matrix
         self.tfidf_matrix_terms = self.tfidf_vectorizer.get_feature_names()
-
         # Get the indexs of the values closest to the centroid
         # The indexes correlate to the position in the tfidf matrix
         values_closest_to_centroid = 5  # Return the n closest values to that centroid
@@ -82,18 +86,8 @@ class DocumentClusterer:
         df.index.rename('cluster', inplace=True)
         return df.sort_index()
 
-    def strip_words(self, documents, kws):
-        dc_logger.debug(documents)
-        for i, document in enumerate(documents):
-            doc_temp = document
-            for word in kws:
-                if word in document:
-                    doc_temp = doc_temp.replace(word, "")
-            documents[i] = doc_temp
-        dc_logger.debug(documents)
-        return documents
-
     def main(self, documents):
         self.create_tf_idf_matrix(documents)
+        self.create_term_weight_df()
         v_p_clusters = self.cluster()
-        dc_logger.info(v_p_clusters)
+        #dc_logger.info(v_p_clusters)

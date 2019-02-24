@@ -11,6 +11,12 @@ until_ts = t + timedelta(hours=2)
 
 class TestUtils:
 
+    def test_calc_boundaries(self):
+        a, b = ut.calc_daterange_boundaries(t, from_offset=0, to_offset=3)
+
+        assert a.isoformat() == "2018-10-17T08:54:13+00:00"
+        assert b.isoformat() == "2018-10-17T11:54:13+00:00"
+
     def test_not_within_date_boundary_minutes_under(self):
         # 1 minute over
         test = parse("2018-10-17T06:53:13Z")

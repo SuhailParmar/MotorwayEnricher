@@ -36,13 +36,7 @@ class RabbitMQClient:
         mq_logger.info('Waiting for messages from queue: {}'.format
                        (self.source_queue))
 
-        try:
-            channel.start_consuming()
-        except (Exception, KeyboardInterrupt) as e:
-            mq_logger.error(e)
-            mq_logger.error('Closing Connection.')
-            channel.close()
-            return
+        channel.start_consuming()
 
     def connect_to_mq(self):
         mq_logger.debug('Connecting to mq...')
