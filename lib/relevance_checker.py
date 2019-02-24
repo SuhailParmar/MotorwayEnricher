@@ -89,7 +89,7 @@ class RelevanceChecker:
             rl_logger.info('Skipping Retweet: {}'.format(tweet.text))
             return False
 
-        if not self.is_relevant_direction(original_direction, tweet):
+        if not self.is_relevant_direction(original_direction, tweet.text):
             rl_logger.info('Tweet is not about direction {}'.format(
                 original_direction))
             return False

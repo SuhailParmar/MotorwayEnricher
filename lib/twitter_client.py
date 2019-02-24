@@ -164,7 +164,7 @@ class TwitterClient:
                 if in_range is 0:
                     th_logger.info("Tweet is in range")
                     relevant_tweet =\
-                        rc.is_tweet_relevant(tweet.text, original_direction)
+                        rc.is_tweet_relevant(tweet, original_direction)
 
                     if not relevant_tweet:
                         continue
@@ -185,7 +185,7 @@ class TwitterClient:
                 elif in_range is 2:
                     # The tweet is earlier than the lower bound
                     # Stop polling but continue to validate tweets
-                    th_logger.info("Tweet is BELOW range. Stopped Polling.")
+                    th_logger.info("Tweet is BELOW range.")
                     continue_polling = False
 
         return tweets_in_date_range
