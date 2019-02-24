@@ -3,6 +3,6 @@
 # Have meaningless words with a greater weight
 
 meaningless_words = [
-    "travel", "due", "to", "earlier", "slow", "road", "anti", "details",
+    "travel", "due", "earlier", "slow", "road", "anti", "details",
     "accident"  # Contentious one...
 ]
