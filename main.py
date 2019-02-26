@@ -6,17 +6,17 @@ from lib.rabbitmq_client import RabbitMQClient
 from lib.twitter_client import TwitterClient
 from lib.relevance_checker import RelevanceChecker
 from lib.document_clusterer import DocumentClusterer
+from lib.natural_language import NaturalLanguage
 from resources.relevant_words import RELEVANT_WORDS
 from resources.tier_one_handles import T1_HANDLES
 
-Logger.initiate_logger()
-
 main_logger = logging.getLogger("MotorwayEnricher Main")
-
+Logger.initiate_logger()
 mq = RabbitMQClient()
 rc = RelevanceChecker()
 utils = Utils()
 tc = TwitterClient()
+nt = NaturalLanguage()
 dc = DocumentClusterer()
 
 
@@ -26,12 +26,66 @@ def callback(ch, method, properties, body):
     main_logger.info('Recieved message from Queue:{}'.format(tweet))
 
     timestamp = utils.parse_timestamp_with_utc(tweet["time_timestamp"])
+    direction = tweet['direction']
+    motorway_and_junctions, other_info =\
+        rc.create_eng_keywords_from_tweet(tweet)
+
+    tweets_in_time_period = []
+    # Build query params using Capital letters and search tweets
+    for j in motorway_and_junctions[1:]:
+        # Search Capital M6, J25
+        query = motorway_and_junctions[0] + " " + j
+        tweets = tc.search_tweets_between_time_period(timestamp,
+                                                      direction,
+                                                      query)
+        for t in tweets:
+            if t not in tweets_in_time_period:
+                tweets_in_time_period.append(t)
+
+    if len(tweets_in_time_period) > 3:
+        # Remove 'meaningless' words
+        kws = [*motorway_and_junctions, *other_info]
+        kws = nt.convert_to_lowercase(kws)
+        stripped_tweets = utils.strip_words(tweets_in_time_period, kws)
+        # Begin Clustering
+        dc.main(stripped_tweets)
+
+    else:
+        main_logger.info(
+            "Can't create a tf-idf matrix with only {} Relevant tweets.".
+            format(len(tweets_in_time_period)))
+
+
+def main():
+    mq.consume(callback)
+
+
+if __name__ == "__main__":
+    main_logger.info('Lets get this bread.')
+    main()
+
+
+"""
+Dont look at this pls:
+def t1_callback(ch, method, properties, body):
+    tweet = utils.load_tweet(body)
+    main_logger.info('Recieved message from Queue:{}'.format(tweet))
+    timestamp = utils.parse_timestamp_with_utc(tweet["time_timestamp"])
+    direction = tweet['direction']
     # Tweets which may not be related to the current incident
-    T1_tweets_in_time_period = tc.poll(timestamp)
+    T1_tweets_in_time_period = tc.poll(timestamp, direction)
 
     if len(T1_tweets_in_time_period) > 0:
         # Filter out unrelated tweets
-        mw, junctions, directions = rc.create_eng_keywords_from_tweet(tweet)
+        mj, other_info = rc.create_eng_keywords_from_tweet(tweet)
+
+        kws = [*mj, *other_info]
+        kws = nt.convert_to_lowercase(kws)
+        T1_relevant_tweets_in_time_period = []
+
+        for tweet in T1_tweets_in_time_period:
+            if rc.is_tweet_relevant(tweet, direction):
+                T1_relevant_tweets_in_time_period.ap
 
         T1_relevant_tweets_in_time_period = rc.find_relevant_tweets(
             T1_tweets_in_time_period, mw, junctions, directions)
@@ -48,12 +102,4 @@ def callback(ch, method, properties, body):
 
             # Begin Clustering
             dc.main(stripped_tweets)
-
-
-def main():
-    mq.consume(callback)
-
-
-if __name__ == "__main__":
-    main_logger.info('Lets get this bread.')
-    main()
+"""

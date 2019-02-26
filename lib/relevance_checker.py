@@ -84,17 +84,20 @@ class RelevanceChecker:
         lowercase_tweet = self.nl.convert_to_lowercase(tweet.text)
         lowercase_tweet = Utils.strip_link_from_tweet(lowercase_tweet)
 
+        if len(lowercase_tweet) < 2:
+            return False
+
         # ignore retweets
         if lowercase_tweet[0] == 'r' and lowercase_tweet[1] == 't':
             rl_logger.info('Skipping Retweet: {}'.format(tweet.text))
             return False
 
-        if not self.is_relevant_direction(original_direction, tweet.text):
+        if not self.is_relevant_direction(original_direction, lowercase_tweet):
             rl_logger.info('Tweet is not about direction {}'.format(
                 original_direction))
             return False
 
-        rl_logger.info('** Keeping tweet:\n {}'.format(tweet.text))
+        rl_logger.info('** Keeping Relevant tweet:\n {}'.format(tweet.text))
         return lowercase_tweet
 
     def is_relevant_direction(self, original_direction, tweet):
