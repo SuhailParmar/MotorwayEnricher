@@ -45,7 +45,7 @@ class DocumentClusterer:
         self.weights_df = weights_df.sort_values(by='weight', ascending=False)
         dc_logger.debug(weights_df.head(20))
 
-    def cluster(self, n_clusters=3):
+    def cluster(self, n_clusters=2):
         # Based on the original documents provided assign each
         # a clustering number.
         # Choose the number of clusters to create
@@ -90,4 +90,4 @@ class DocumentClusterer:
         self.create_tf_idf_matrix(documents)
         self.create_term_weight_df()
         v_p_clusters = self.cluster()
-        #dc_logger.info(v_p_clusters)
+        # dc_logger.info(v_p_clusters)

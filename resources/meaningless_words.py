@@ -4,5 +4,6 @@
 
 meaningless_words = [
     "travel", "due", "earlier", "slow", "road", "anti", "details",
-    "accident"  # Contentious one...
+    "rspca_official", "reason", "awaiting", "location", "alert",
+    "accident", "traffic", ""  # Contentious one...
 ]

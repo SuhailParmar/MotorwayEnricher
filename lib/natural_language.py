@@ -18,4 +18,3 @@ class NaturalLanguage:
             except Exception as e:
                 print("Couldnt convert" + e)
         return values
-
