@@ -29,6 +29,7 @@ class DocumentClusterer:
         self.dist = None
         self.cluster_names = None
         self.tfidf_matrix_terms = None
+        self.top_five_terms = []
 
     def create_tf_idf_matrix(self, documents):
         """
@@ -43,7 +44,10 @@ class DocumentClusterer:
         weights = np.asarray((self.tdidf_matrix.mean(axis=0))).ravel().tolist()
         weights_df = pd.DataFrame({'term': terms, 'weight': weights})
         self.weights_df = weights_df.sort_values(by='weight', ascending=False)
-        dc_logger.debug(weights_df.head(20))
+
+        top_five_value_terms = self.weights_df.head(5)
+        self.top_five_terms = [v[0] for v in top_five_value_terms.values]
+        dc_logger.debug(self.weights_df.head(20))
 
     def cluster(self, n_clusters=2):
         # Based on the original documents provided assign each
@@ -79,8 +83,6 @@ class DocumentClusterer:
 
             relvant_values_per_cluster[i] = terms
 
-        return relvant_values_per_cluster
-
     def to_dataframe(self, docs, cluster):
         df = pd.DataFrame(docs, index=cluster, columns=['original_tweet'])
         df.index.rename('cluster', inplace=True)
@@ -89,5 +91,5 @@ class DocumentClusterer:
     def main(self, documents):
         self.create_tf_idf_matrix(documents)
         self.create_term_weight_df()
-        v_p_clusters = self.cluster()
-        # dc_logger.info(v_p_clusters)
+        self.cluster()  # Only print the clusterings out.
+        return self.top_five_terms

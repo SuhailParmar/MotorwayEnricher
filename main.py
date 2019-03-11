@@ -7,6 +7,8 @@ from lib.twitter_client import TwitterClient
 from lib.relevance_checker import RelevanceChecker
 from lib.document_clusterer import DocumentClusterer
 from lib.natural_language import NaturalLanguage
+from lib.exceptions import FailurePostToAPI
+from lib.api_requests import APIRequests
 from resources.relevant_words import RELEVANT_WORDS
 from resources.tier_one_handles import T1_HANDLES
 
@@ -48,8 +50,15 @@ def callback(ch, method, properties, body):
         kws = nt.convert_to_lowercase(kws)
         stripped_tweets = utils.strip_words(tweets_in_time_period, kws)
         # Begin Clustering
-        dc.main(stripped_tweets)
+        cluster_one = dc.main(stripped_tweets)
 
+        data = {"extra_information": cluster_one}
+        tweet_id = tweet['event_id']
+        try:
+            api_req = APIRequests()
+            api_req.patch_to_api(tweet_id, data)
+        except FailurePostToAPI as e:
+            main_logger.error(e.msg)
     else:
         main_logger.info(
             "Can't create a tf-idf matrix with only {} Relevant tweets.".

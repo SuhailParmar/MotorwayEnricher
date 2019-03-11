@@ -6,7 +6,7 @@ from lib.config import api_client_secret
 from lib.exceptions import FailurePostToAPI
 
 from json import loads
-from requests import get, post
+from requests import get, post, patch
 import logging
 
 mq_logger = logging.getLogger("Requests")
@@ -55,7 +55,7 @@ class APIRequests():
         response = post(self.uri, headers={
             'Content-Type': 'application/json',
             'Authorization': "Bearer {0}".format(token),
-            },
+        },
             data=data)
 
         if response.status_code != 201:
@@ -63,4 +63,21 @@ class APIRequests():
                                    loads(response.content))
 
         logging.info('Successfully Posted event to the API!')
+        return response.status_code
+
+    def patch_to_api(self, id, data):
+        logging.info('Patching Event to API...')
+        token = self.get_auth_token()
+
+        response = patch(self.uri + str(id), headers={
+            'Content-Type': 'application/json',
+            'Authorization': "Bearer {0}".format(token),
+        },
+            data=data)
+
+        if response.status_code != 200:
+            raise FailurePostToAPI(response.status_code,
+                                   loads(response.content))
+
+        logging.info('Successfully Patched event to the API!')
         return response.status_code
