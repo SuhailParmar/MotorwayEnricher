@@ -92,7 +92,16 @@ def callback():
         kws)
 
     # Begin Clustering
-    dc.main(stripped_tweets)
+    cluster_one = dc.main(stripped_tweets)
+    data = {"extra_information": cluster_one}
+
+    tid = 1105020881515040768
+
+    from lib.api_requests import APIRequests
+    from json import dumps
+
+    api = APIRequests()
+    api.patch_to_api(tid, dumps(data))
 
 
 if __name__ == "__main__":
