@@ -28,7 +28,7 @@ test_tweet = {
 class TestRelevanceChecker:
 
     rc = RelevanceChecker()
-    mw, js, ds = rc.create_eng_keywords_from_tweet(test_tweet)
+    mwjs, oi = rc.create_eng_keywords_from_tweet(test_tweet)
 
     def test_relevant_direction(self):
 
@@ -51,24 +51,18 @@ class TestRelevanceChecker:
 
     def test_create_keywords(self):
 
-        assert self.mw == ["m6"]
-        assert len(self.js) == 6
-        assert self.js[0] == 'j14'
-        assert self.js[3] == 'j15'
-        assert len(self.ds) == 3
-        assert self.ds[0] == 'northbound'
+        print(self.mwjs)
+
+        assert self.mwjs[0] == "M6"
+        assert len(self.mwjs) == 3
+        assert self.mwjs[1] == 'J14'
+        assert self.mwjs[2] == 'J15'
 
     def test_find_relevant_tweets(self):
 
-        t1 = "The m6 junction 14 is rammed!"
-        t2 = " m6 j15 is so busy"
-        t3 = " m6 j13 is so busy"  # Irrelevant
+        t1 = "m6 J10 northbound crash!"
+        t2 = " m6 J10 southbound crash!"
 
-        documents = [t1, t2, t3]
-        response = self.rc.find_relevant_tweets(
-            documents, self.mw, self.js, self.ds)
-        assert len(response) == 2
-        assert response[0] == t1
-        assert response[1] == t2
+        assert not self.rc.is_relevant_direction("southbound", t1)
+        assert not self.rc.is_relevant_direction("northbound", t2)
 
-    # M60 bug

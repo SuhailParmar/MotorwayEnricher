@@ -2,6 +2,15 @@ from lib.utils import Utils
 from dateutil.parser import parse
 from datetime import timedelta
 from dateutil.tz import tzutc
+from lib.document_clusterer import DocumentClusterer
+
+documents = [
+        "Lorry Caused The Accident On the m6 j25",
+        "m6 incident was caused by overturned lorry",
+        "Lorry is flipped over on m6",
+        "m6 accident on j25 south",
+        "Seems to be an accident on the m6 j25",
+]
 
 ut = Utils()
 t = parse("2018-10-17T08:54:13Z")

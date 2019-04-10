@@ -3,6 +3,9 @@ from lib.natural_language import NaturalLanguage
 
 class TestNaturalLanguage:
 
+    import nltk
+    nltk.download('punkt')
+
     nl = NaturalLanguage()
 
     def test_lower_case_convertion(self):
